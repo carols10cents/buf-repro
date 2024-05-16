@@ -21,7 +21,7 @@ message GetTablePartitionTemplate {
 }
 
 message FindParquetFiles {
-    string namespace = 1;
+    string foo = 1;
     string table = 2;
     string partition_template = 3;
     repeated string errors = 4;
