@@ -1,0 +1,17 @@
+---
+version: v1beta1
+build:
+  roots:
+    - bulk_ingester/protos/
+
+lint:
+  allow_comment_ignores: true
+  ignore:
+    - google
+  use:
+    - DEFAULT
+
+breaking:
+  use:
+    - WIRE
+    - WIRE_JSON

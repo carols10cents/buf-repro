@@ -1,0 +1,148 @@
+syntax = "proto3";
+package influxdata.iox.bulk_ingester.v1;
+option go_package = "github.com/influxdata/iox/bulk_ingester/v1";
+
+message FsmState {
+    oneof value {
+        GetTablePartitionTemplate get_table_partition_template = 1;
+        FindParquetFiles find_parquet_files = 2;
+        CollectMetadata collect_metadata = 3;
+        UpsertSortKeys upsert_sort_keys = 4;
+        CreateIntermediateFiles create_intermediate_files = 5;
+        Finalize finalize = 6;
+        Complete complete = 7;
+    }
+}
+
+message GetTablePartitionTemplate {
+    string namespace = 1;
+    string table = 2;
+    repeated string errors = 3;
+}
+
+message FindParquetFiles {
+    string namespace = 1;
+    string table = 2;
+    string partition_template = 3;
+    repeated string errors = 4;
+}
+
+message CollectMetadata {
+    string namespace = 1;
+    string table = 2;
+    string partition_template = 3;
+    repeated string files_to_read = 4;
+    map<string, IngestParquetFileMetadata> files_complete = 5;
+    repeated Field table_schema = 6;
+    map<string, bytes> approx_distinct = 7;
+    map<string, ParquetFileList> partitions_with_relevant_files = 8;
+    repeated string errors = 9;
+}
+
+message ParquetFileList {
+    // Object store paths to the files being imported. Converted to `IngestParquetFilePath`.
+    repeated string parquet_files = 1;
+}
+
+message UpsertSortKeys {
+    string namespace = 1;
+    string table = 2;
+    string partition_template = 3;
+    map<string, IngestParquetFileMetadata> parquet_files = 4;
+    repeated Field table_schema = 5;
+    repeated string sort_key = 6;
+    map<string, ParquetFileList> partitions_with_relevant_files = 7;
+    map<string, PartitionMetadata> completed_partitions_with_sort_keys = 8;
+    repeated string errors = 9;
+}
+
+message CreateIntermediateFiles {
+    string namespace = 1;
+    string table = 2;
+    string partition_template = 3;
+    map<string, IngestParquetFileMetadata> parquet_files = 4;
+    repeated Field table_schema = 5;
+    repeated string sort_key = 6;
+    map<string, PartitionMetadata> partitions = 7;
+    map<string, UploadedFileList> partitions_complete = 8;
+    repeated string errors = 9;
+}
+
+message Finalize {
+    string namespace = 1;
+    string table = 2;
+    map<string, UploadedFileList> partitions_uploaded = 3;
+    map<string, FinalizedFileList> partitions_complete = 4;
+    repeated string errors = 5;
+}
+
+message Complete {
+    string namespace = 1;
+    string table = 2;
+    int64 num_partitions = 3;
+    map<string, FinalizedFileList> partitions_complete = 4;
+    repeated string errors = 5;
+}
+
+message IngestParquetFileMetadata {
+    int64 num_rows = 1;
+    repeated string columns = 2;
+    TimestampMinMax timestamp_min_max = 3;
+}
+
+message TimestampMinMax {
+    int64 min = 1;
+    int64 max = 2;
+}
+
+message Field {
+    string name = 1;
+    DataType data_type = 2;
+    bool nullable = 3;
+}
+
+// Subset of Arrow data types that Parquet files exported from TSM can contain
+enum DataType {
+    // An unknown column data type.
+    //
+    // This is an invalid value and SHOULD never be specified.
+    DATA_TYPE_UNSPECIFIED = 0;
+
+    DATA_TYPE_I64 = 1;
+    DATA_TYPE_U64 = 2;
+    DATA_TYPE_F64 = 3;
+    DATA_TYPE_BOOL = 4;
+    DATA_TYPE_STRING = 5;
+    DATA_TYPE_TIMESTAMP = 6;
+}
+
+message PartitionMetadata {
+  repeated string sort_key = 1;
+  repeated string relevant_files = 2;
+}
+
+// Metadata for a file that has been uploaded to IOx's object store but not yet finalized in
+// IOx's catalog
+message Uploaded {
+    string upload_url = 1;
+    int64 file_size_bytes = 2;
+    repeated string file_sort_key = 3;
+    int64 max_time = 4;
+    map<string, string> parquet_metadata = 5;
+}
+
+message UploadedFileList {
+    repeated Uploaded files = 1;
+}
+
+// Metadata for a file that has been finalized and added to IOx's catalog
+message Finalized {
+    string upload_url = 1;
+    int64 file_size_bytes = 2;
+    repeated string file_sort_key = 3;
+    int64 max_time = 4;
+}
+
+message FinalizedFileList {
+    repeated Finalized files = 1;
+}
