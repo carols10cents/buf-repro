@@ -1,0 +1,52 @@
+# Run 'buf lint' agains our proto files to check for breaking changes and
+# non-idomatic usage.
+#
+#    https://buf.build/docs/lint/usage
+#
+# Notes:
+#
+#   - Disabled by the presence of the "incompatible protobuf" PR label
+#   - Always runs the job, but skips the individual tasks if disabled (so the
+#     action can be marked as "required" for PRs)
+#   - Uses the official buf lint action
+#     (https://github.com/bufbuild/buf-lint-action)
+#
+
+name: "Protobuf Lint"
+on:
+   pull_request:
+     types:
+       - labeled
+       - opened
+       - reopened
+       - synchronize
+jobs:
+  lint-protos:
+    runs-on: ubuntu-latest
+    name: Buf lint
+    steps:
+      # Run `git checkout`
+      - uses: actions/checkout@v4
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'incompatible protobuf') }}
+        with:
+          fetch-depth: '100'
+          submodules: true
+      # Install the `buf` CLI
+      - uses: bufbuild/buf-setup-action@v1
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'incompatible protobuf') }}
+      # Run breaking change detection against the `main` branch
+      - uses: bufbuild/buf-breaking-action@v1
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'incompatible protobuf') }}
+        with:
+          against: 'https://github.com/influxdata/influxdb_iox.git#branch=main'
+      # Lint your Protobuf sources
+      - uses: bufbuild/buf-lint-action@v1
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'incompatible protobuf') }}
+
+      # Be helpful if the lint fails
+      - name: Lint failure! Read this :)
+        if: ${{ failure() }}
+        run: |
+          echo "If you want to make changes forbidden by this lint, please"
+          echo "coordinate with the IOx team, add the 'incompatible protobuf' label"
+          echo "to the PR, and rerun this test"
