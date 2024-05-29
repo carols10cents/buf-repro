@@ -2,7 +2,7 @@ syntax = "proto3";
 package influxdata.iox.bulk_ingester.v1;
 option go_package = "github.com/influxdata/iox/bulk_ingester/v1";
 
-import "generated_types/protos/influxdata/iox/column_type/v1/type.proto";
+import "influxdata/iox/column_type/v1/type.proto";
 
 message Column {
     string name = 1;
