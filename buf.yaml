@@ -1,0 +1,10 @@
+version: v2
+modules:
+  - path: generated_types/protos
+    lint:
+      use:
+        - DEFAULT
+  - path: bulk_ingester/protos
+    lint:
+      use:
+        - DEFAULT
