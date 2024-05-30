@@ -14,5 +14,4 @@ jobs:
       - uses: bufbuild/buf-action@v0.1.0
         with:
           comment: false
-        with:
           push: false
