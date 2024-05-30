@@ -40,7 +40,7 @@ jobs:
       - uses: bufbuild/buf-breaking-action@v1
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'incompatible protobuf') }}
         with:
-          against: 'https://github.com/influxdata/influxdb_iox.git#branch=main'
+          against: 'https://github.com/carols10cents/buf-repro.git#branch=main'
       # Lint your Protobuf sources
       - uses: bufbuild/buf-lint-action@v1
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'incompatible protobuf') }}
